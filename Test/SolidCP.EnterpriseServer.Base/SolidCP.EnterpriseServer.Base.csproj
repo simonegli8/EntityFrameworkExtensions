@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>SolidCP.snk</AssemblyOriginatorKeyFile>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <OutputPath>..\..\Bin</OutputPath>
+    <Nullable>disable</Nullable>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework.ToLowerInvariant())\</IntermediateOutputPath>
+    <LangVersion>12</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <WarningsAsErrors>618</WarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\VersionInfo.cs" Link="VersionInfo.cs" />
+    <Compile Update="Reports\OverusageReport.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>OverusageReport.xsd</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SolidCP.snk" />
+    <None Include="Reports\OverusageReport.xsc">
+      <DependentUpon>OverusageReport.xsd</DependentUpon>
+    </None>
+    <None Include="Reports\OverusageReport.xsd">
+      <SubType>Designer</SubType>
+      <Generator>MSDataSetGenerator</Generator>
+      <LastGenOutput>OverusageReport.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Reports\OverusageReport.xss">
+      <DependentUpon>OverusageReport.xsd</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SolidCP.Providers.Base\SolidCP.Providers.Base.csproj" />
+  </ItemGroup>
+</Project>

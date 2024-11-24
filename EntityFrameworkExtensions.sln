@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35514.174
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EntityFrameworkExtensions", "Extensions\EntityFrameworkExtensions.csproj", "{03C38EB0-6B65-422B-AFDE-0CCE6E34D084}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EntityFrameworkExtensions.Test", "Test\EntityFrameworkExtensions.Test\EntityFrameworkExtensions.Test.csproj", "{98004C23-E98B-43A2-905F-73AD4DDD0BA1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolidCP.Providers.Base", "Test\SolidCP.Providers.Base\SolidCP.Providers.Base.csproj", "{82F5D3E8-0B0A-4C43-AFFC-4FD5E63ED45E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolidCP.EnterpriseServer.Base", "Test\SolidCP.EnterpriseServer.Base\SolidCP.EnterpriseServer.Base.csproj", "{CBD3DC02-5A9C-4B86-A650-DCF791DBEADC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolidCP.EnterpriseServer.Data", "Test\SolidCP.EnterpriseServer.Data\SolidCP.EnterpriseServer.Data.csproj", "{9277356C-BC53-47F2-A5F1-3F9D7DDF606E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolidCP.Web.Services", "Test\SolidCP.Web.Services\SolidCP.Web.Services.csproj", "{60B3D24B-7859-4FE8-B2F2-BAA85B8FD2AC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{03C38EB0-6B65-422B-AFDE-0CCE6E34D084}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03C38EB0-6B65-422B-AFDE-0CCE6E34D084}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03C38EB0-6B65-422B-AFDE-0CCE6E34D084}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03C38EB0-6B65-422B-AFDE-0CCE6E34D084}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98004C23-E98B-43A2-905F-73AD4DDD0BA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98004C23-E98B-43A2-905F-73AD4DDD0BA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98004C23-E98B-43A2-905F-73AD4DDD0BA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98004C23-E98B-43A2-905F-73AD4DDD0BA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82F5D3E8-0B0A-4C43-AFFC-4FD5E63ED45E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82F5D3E8-0B0A-4C43-AFFC-4FD5E63ED45E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82F5D3E8-0B0A-4C43-AFFC-4FD5E63ED45E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82F5D3E8-0B0A-4C43-AFFC-4FD5E63ED45E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CBD3DC02-5A9C-4B86-A650-DCF791DBEADC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBD3DC02-5A9C-4B86-A650-DCF791DBEADC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBD3DC02-5A9C-4B86-A650-DCF791DBEADC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBD3DC02-5A9C-4B86-A650-DCF791DBEADC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9277356C-BC53-47F2-A5F1-3F9D7DDF606E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9277356C-BC53-47F2-A5F1-3F9D7DDF606E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9277356C-BC53-47F2-A5F1-3F9D7DDF606E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9277356C-BC53-47F2-A5F1-3F9D7DDF606E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60B3D24B-7859-4FE8-B2F2-BAA85B8FD2AC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60B3D24B-7859-4FE8-B2F2-BAA85B8FD2AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60B3D24B-7859-4FE8-B2F2-BAA85B8FD2AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60B3D24B-7859-4FE8-B2F2-BAA85B8FD2AC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,31 @@
+﻿using System;
+using System.Collections.Generic;
+using SolidCP.EnterpriseServer.Data.Configuration;
+using SolidCP.EnterpriseServer.Data.Entities;
+using System.ComponentModel.DataAnnotations.Schema;
+#if NetCore
+using Microsoft.EntityFrameworkCore;
+#endif
+#if NetFX
+using System.Data.Entity;
+#endif
+
+namespace SolidCP.EnterpriseServer.Data.Configuration;
+
+public partial class PackageSettingConfiguration: EntityTypeConfiguration<PackageSetting>
+{
+    public override void Configure() {
+
+		if (IsSqlServer) Property(e => e.PropertyValue).HasColumnType("ntext");
+		else if (IsCore && (IsMySql || IsMariaDb || IsSqlite || IsPostgreSql))
+		{
+			Property(e => e.PropertyValue).HasColumnType("TEXT");
+			if (IsSqlite)
+			{
+				Property(e => e.SettingsName).HasColumnType("TEXT COLLATE NOCASE");
+				Property(e => e.PropertyName).HasColumnType("TEXT COLLATE NOCASE");
+			}
+		}
+
+    }
+}
