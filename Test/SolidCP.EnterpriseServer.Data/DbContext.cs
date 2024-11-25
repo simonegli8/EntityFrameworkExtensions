@@ -24,6 +24,8 @@ namespace SolidCP.EnterpriseServer.Data
     public partial class DbContext : IDisposable
     {
 
+        public DateTime DateTimeMin = new DateTime(1735, 1, 1);
+
         public const bool UseStoredProcedures = true;
 
         string connectionString = null;

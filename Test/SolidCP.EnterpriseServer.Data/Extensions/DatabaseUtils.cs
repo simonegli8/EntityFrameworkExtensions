@@ -1409,7 +1409,7 @@ namespace SolidCP.EnterpriseServer.Data
 				{
 					while (null != (sql = script.ReadNextStatement()))
 					{
-						sql = ProcessInstallVariables?.Invoke(sql);
+						sql = ProcessInstallVariables?.Invoke(sql) ?? sql;
 						command.CommandText = sql;
 						try
 						{
