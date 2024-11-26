@@ -181,8 +181,6 @@ public static partial class EstrellasDeEsperanzaEntityFrameworkExtensions
     {
 
 		var queryContext = new QueryContext<EntityType>(query, context);
-
-#if NETCOREAPP
 		switch (queryContext.Type)
         {
 			case DatabaseType.SqlServer:
@@ -200,8 +198,6 @@ public static partial class EstrellasDeEsperanzaEntityFrameworkExtensions
             default:
 				break;
         }
-#else
-#endif
 		var set = queryContext.Context.Set<EntityType>();
 		set.AddRange(query);
 		return queryContext.Context.SaveChanges();

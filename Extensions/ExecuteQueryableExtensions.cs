@@ -4,10 +4,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-
-
 #if NETFRAMEWORK
 namespace System.Data.Entity;
+using System.Data.Entity.Infrastructure;
+using System.Data.Entity.Core.Metadata.Edm;
+using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Contexts;
+using System.Data.Entity.Core.Mapping;
 #else
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
@@ -40,7 +43,7 @@ public static partial class EstrellasDeEsperanzaEntityFrameworkExtensions
 	private static Regex ParseParamsSqliteRegex() => parseParamsSqliteRegex;
 #endif
 	public enum DatabaseType { Unknown, SqlServer, Sqlite, MySql, MariaDb, PostgreSql, Oracle, Other };
-	public class QueryContext<EntityType> where EntityType : class
+	public class QueryContext<EntityType> where EntityType: class
 	{
 		public IQueryable<EntityType> Query;
 		public DbContext Context;
@@ -59,11 +62,17 @@ public static partial class EstrellasDeEsperanzaEntityFrameworkExtensions
 				case PostgreSqlProviderCore: Type = DatabaseType.PostgreSql; break;
 				default: Type = DatabaseType.Other; break;
 			}
+#else
+			var provider = query.Provider.GetType().Assembly.GetName().Name;
+			switch (provider)
+			{
+				default: Type = DatabaseType.Unknown; break;
+			}
 #endif
 			var set = Context.Set<EntityType>();
 			if (set == null) throw new InvalidOperationException("Insert: EntityType must be an entity type.");
 		}
-		public string Table
+		public string TableWithSchema
 		{
 			get
 			{
@@ -71,11 +80,55 @@ public static partial class EstrellasDeEsperanzaEntityFrameworkExtensions
 				var entityType = Context.Model.FindEntityType(typeof(EntityType));
 				return entityType.GetSchemaQualifiedTableName();
 #else
-		return "";
+				var objectContext = ((IObjectContextAdapter)Context).ObjectContext;
+
+				var metadata = objectContext.MetadataWorkspace;
+
+				// Get the part of the model that contains info about the actual CLR types
+				var objectItemCollection = ((ObjectItemCollection)metadata.GetItemCollection(DataSpace.OSpace));
+
+				// Get the entity type from the model that maps to the CLR type
+				var entityType = metadata
+						.GetItems<Core.Metadata.Edm.EntityType>(DataSpace.OSpace)
+							  .First(e => objectItemCollection.GetClrType(e) == typeof(EntityType));
+
+				// Get the entity set that uses this entity type
+				var entitySet = metadata
+					.GetItems<EntityContainer>(DataSpace.CSpace)
+						  .First()
+						  .EntitySets
+						  .First(s => s.ElementType.Name == entityType.Name);
+
+				// Find the mapping between conceptual and storage model for this entity set
+				var mapping = metadata.GetItems<Core.Mapping.EntityContainerMapping>(DataSpace.CSSpace)
+					.First()
+					.EntitySetMappings
+					.First(s => s.EntitySet == entitySet);
+
+				// Find the storage entity set (table) that the entity is mapped
+				var storageEntitySet = mapping
+					.EntityTypeMappings.Single()
+					.Fragments.Single()
+					.StoreEntitySet;
+
+				switch (Type)
+				{
+					case DatabaseType.SqlServer:
+					case DatabaseType.Oracle:
+						return $"[{storageEntitySet.Schema}].[{storageEntitySet.Name}]";
+					case DatabaseType.MySql:
+					case DatabaseType.MariaDb:
+						return $"`{storageEntitySet.Schema}`.`{storageEntitySet.Name}`";
+					case DatabaseType.Sqlite:
+						return $"\"{storageEntitySet.Schema}\".\"{storageEntitySet.Name}\"";
+					case DatabaseType.PostgreSql:
+						return $"{storageEntitySet.Schema}.\"{storageEntitySet.Name}\"";
+					default: return $"{storageEntitySet.Schema}.{storageEntitySet.Name}";
+				}
 #endif
 			}
 		}
-		public IEnumerable<System.Reflection.PropertyInfo> Properties
+		public IEnumerable<PropertyInfo> Properties
 		{
 			get
 			{
@@ -106,6 +159,7 @@ public static partial class EstrellasDeEsperanzaEntityFrameworkExtensions
 					.OfType<System.Reflection.PropertyInfo>();
 			}
 		}
+
 		public IEnumerable<string> Columns
 		{
 			get
@@ -114,11 +168,40 @@ public static partial class EstrellasDeEsperanzaEntityFrameworkExtensions
 				var entityType = Context.Model.FindEntityType(typeof(EntityType));
 				return Properties.Select(p => entityType.GetProperty(p.Name)?.GetColumnName());
 #else
-				return Enumerable.Empty<string>();					
+				var metadata = ((IObjectContextAdapter)Context).ObjectContext.MetadataWorkspace;
+
+				// Get the part of the model that contains info about the actual CLR types
+				var objectItemCollection = ((Core.Metadata.Edm.ObjectItemCollection)metadata.GetItemCollection(Core.Metadata.Edm.DataSpace.OSpace));
+
+				// Get the entity type from the model that maps to the CLR type
+				var entityType = metadata
+						.GetItems<Core.Metadata.Edm.EntityType>(Core.Metadata.Edm.DataSpace.OSpace)
+						.Single(e => objectItemCollection.GetClrType(e) == typeof(EntityType));
+
+				// Get the entity set that uses this entity type
+				var entitySet = metadata
+					.GetItems<Core.Metadata.Edm.EntityContainer>(Core.Metadata.Edm.DataSpace.CSpace)
+					.Single()
+					.EntitySets
+					.Single(s => s.ElementType.Name == entityType.Name);
+
+				// Find the mapping between conceptual and storage model for this entity set
+				var mapping = metadata.GetItems<EntityContainerMapping>(Core.Metadata.Edm.DataSpace.CSSpace)
+						.Single()
+						.EntitySetMappings
+						.Single(s => s.EntitySet == entitySet);
+
+				// Find the storage property (column) that the property is mapped
+				var propertyMappings = mapping
+					.EntityTypeMappings.Single()
+					.Fragments.Single()
+					.PropertyMappings
+					.OfType<ScalarPropertyMapping>();
+				return Properties
+					.Join(propertyMappings, p => p.Name, m => m.Property.Name, (p, m) => m.Column.Name);
 #endif
 			}
 		}
-
 		public string QuerySql
 		{
 			get
@@ -126,7 +209,16 @@ public static partial class EstrellasDeEsperanzaEntityFrameworkExtensions
 #if NETCOREAPP
 				return Query.ToQueryString();
 #else
-		return "";		
+
+
+				var internalQueryField = Query.GetType()
+					.GetField("_internalQuery", BindingFlags.NonPublic | BindingFlags.Instance);
+				var internalQuery = internalQueryField.GetValue(Query);
+				var objectQueryField = internalQuery.GetType()
+					.GetField("_objectQuery", BindingFlags.NonPublic | BindingFlags.Instance);
+				var objectQuery = objectQueryField.GetValue(internalQuery) as Core.Objects.ObjectQuery<EntityType>;
+
+				return objectQuery.ToTraceString();
 #endif
 			}
 		}
@@ -134,7 +226,7 @@ public static partial class EstrellasDeEsperanzaEntityFrameworkExtensions
 		{
 			var sql = new StringBuilder();
 			sql.Append("INSERT INTO ");
-			sql.Append(Table);
+			sql.Append(TableWithSchema);
 			sql.Append(" (");
 			// Column info
 			bool first = true;
@@ -148,10 +240,12 @@ public static partial class EstrellasDeEsperanzaEntityFrameworkExtensions
 			}
 			sql.AppendLine(")");
 			string sqltext;
-			if (Type != DatabaseType.Sqlite) {
+			if (Type != DatabaseType.Sqlite)
+			{
 				sql.Append("SELECT");
 				sqltext = InjectInsertRegex().Replace(QuerySql, $"$1{sql}", 1);
-			} else
+			}
+			else
 			{
 				sql.Append("SELECT");
 				string partext = "";
@@ -161,7 +255,7 @@ public static partial class EstrellasDeEsperanzaEntityFrameworkExtensions
 					partext = match.Groups["params"].Success ? match.Groups["params"].Value : "";
 					return sqltext;
 				}, 1);
-				var pars = ParseParamsSqliteRegex().Matches(partext); 
+				var pars = ParseParamsSqliteRegex().Matches(partext);
 				sql = new StringBuilder(sqltext);
 				foreach (Match param in pars)
 				{
@@ -177,8 +271,10 @@ public static partial class EstrellasDeEsperanzaEntityFrameworkExtensions
 #endif
 		}
 	}
+
+#if NETCOREAPP
 	public static int ExecuteInsert<EntityType>(this IQueryable<EntityType> query, DbContext? context = null) where EntityType : class
-    {
+	{
 
 		var queryContext = new QueryContext<EntityType>(query, context);
 
@@ -206,4 +302,5 @@ public static partial class EstrellasDeEsperanzaEntityFrameworkExtensions
 		set.AddRange(query);
 		return queryContext.Context.SaveChanges();
 	}
+#endif
 }

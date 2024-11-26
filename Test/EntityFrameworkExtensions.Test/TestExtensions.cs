@@ -1,6 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿#if NETCOREAPP
+using Microsoft.EntityFrameworkCore;
+#else
+using System.Data.Entity;
+#endif
 using Data = SolidCP.EnterpriseServer.Data;
 using System.Diagnostics;
+using SolidCP.EnterpriseServer.Data;
 
 namespace Test
 {
@@ -10,6 +15,9 @@ namespace Test
 		public const string SqliteConnectionString = DbFactory.SqliteConnectionString;
 		public const string SqlServerConnectionString = DbFactory.SqlServerConnectionString;
 		public const string PostgreSqlConnectionString = DbFactory.PostgreSqlConnectionString;
+		public const string MySqlConnectionString = DbFactory.MySqlConnectionString;
+
+		Guid Scope = Guid.NewGuid();
 
 		[TestInitialize]
 		public void Init()
@@ -17,8 +25,27 @@ namespace Test
 			DbFactory.CreateTestDatabase();
 		}
 
+		[TestCleanup]
+		public void Cleanup()
+		{
+			/*Cleanup(SqliteConnectionString);
+			Cleanup(SqlServerConnectionString);
+			Cleanup(MySqlConnectionString);
+			Cleanup(PostgreSqlConnectionString);*/
+		}
+		public void Cleanup(string connectionString)
+		{
+			using (var db = new Data.DbContext(connectionString))
+			{
+				db.TempIds
+					.Where(tid => tid.Scope == Scope)
+					.ExecuteDelete();
+			}
+		}
+
 		public TestContext TestContext { get; set; }
 
+		public class EntityWrapper : Data.Entities.TempId { }
 		public void TestInsertInto(string connectionString)
 		{
 			using (var db = new Data.DbContext(connectionString))
@@ -28,16 +55,17 @@ namespace Test
 				var providers = db.Providers
 					.Where(p => minGroup <= p.GroupId && p.GroupId <= maxGroup);
 				var now = DateTime.Now;
-				var scope = Guid.NewGuid();
+				var date = default(DateTime).ToUniversalTime();
 				var providersIds = providers
-					.Select(p => new Data.Entities.TempId()
+					.Select(p => new EntityWrapper()
 					{
 						Id = p.ProviderId,
-						Created = (DateTime)(object)now,
+						Created = now,
 						Level = 0,
-						Scope = scope,
-						Date = (DateTime)(object)default(DateTime)
+						Scope = Scope,
+						Date = date
 					});
+				var pa = providersIds.ToArray();
 
 				var n = providersIds
 					.ExecuteInsert();
@@ -57,7 +85,7 @@ namespace Test
 
 				var source = providers.Select(p => p.ProviderId).ToArray();
 				var dest = db.TempIds
-					.Where(tid => tid.Scope == scope)
+					.Where(tid => tid.Scope == Scope)
 					.OrderBy(tid => tid.Key)
 					.Select(p => p.Id)
 					.ToArray();
@@ -76,5 +104,8 @@ namespace Test
 
 		[TestMethod]
 		public void TestInsertIntoPostgre() => TestInsertInto(PostgreSqlConnectionString);
+		[TestMethod]
+		public void TestInsertIntoMySql() => TestInsertInto(MySqlConnectionString);
+
 	}
 }
